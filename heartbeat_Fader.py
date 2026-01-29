@@ -32,6 +32,7 @@ class HeartbeatIcon(QWidget):
 
     def on_missed(self):
         self.label.setPixmap(QPixmap(self.off_icon).scaled(32, 64))
+        self.fader.effect.setOpacity(1.0)
 
 
 class HeartbeatFader:
@@ -71,7 +72,8 @@ class HeartbeatFader:
         self.effect.setOpacity(1.0)
         self.fade_anim.stop()
         self.fade_anim.start()
-
+        self.fade_anim.setCurrentTime(0) 
+        
         self.heartbeat_timer.stop()
         self.heartbeat_timer.start()
 
