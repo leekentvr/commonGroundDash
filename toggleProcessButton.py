@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QPushButton, QGraphicsOpacityEffect, QLabel
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QTimer, QSize
-
+from heartbeat_Fader import HeartbeatFader
 
 class ToggleProcessButton(QPushButton):
     def __init__(self, label_start, label_stop, manager, exe_path, add_room, identifier, onIcon, offIcon, heartbeat_key):
@@ -29,7 +29,7 @@ class ToggleProcessButton(QPushButton):
 
         if self.heartbeat_key:
             self._init_heartbeat_system()
-
+            
         self.clicked.connect(self.on_click)
 
 
@@ -37,18 +37,9 @@ class ToggleProcessButton(QPushButton):
     # Heartbeat fade system
     # ---------------------------------------------------------
     def _init_heartbeat_system(self):
-        self.effect = QGraphicsOpacityEffect(self.icon_label)
-        self.icon_label.setGraphicsEffect(self.effect)
+        self.fader = HeartbeatFader(self.icon_label)
+        self.fader.set_on_missed(self.on_missed_heartbeat)
 
-        self.fade_anim = QPropertyAnimation(self.effect, b"opacity")
-        self.fade_anim.setDuration(2000)
-        self.fade_anim.setStartValue(1.0)
-        self.fade_anim.setEndValue(0.3)
-        self.fade_anim.setEasingCurve(QEasingCurve.Linear)
-
-        self.heartbeat_timer = QTimer()
-        self.heartbeat_timer.setInterval(2000)
-        self.heartbeat_timer.timeout.connect(self.on_missed_heartbeat)
 
     def set_icon(self, filename):
         if not filename:
@@ -95,19 +86,14 @@ class ToggleProcessButton(QPushButton):
     def force_stop(self):
         self.manager.stop_exe_by_id(self.identifier)
         self.reset_ui()
-
+        
     def reset_ui(self):
         self.pending = False
         self.setText(self.label_start)
         self.set_icon(self.offIcon)
 
         if self.has_heartbeat():
-            self.effect.setOpacity(1.0)
-            self.fade_anim.stop()
-            self.heartbeat_timer.stop()
-
-
-
+            self.fader.stop()
 
     # ---------------------------------------------------------
     # Heartbeat handling
@@ -117,18 +103,12 @@ class ToggleProcessButton(QPushButton):
         if not self.has_heartbeat():
             return
 
-        # First heartbeat
         if self.pending:
             self.pending = False
             self.setText(self.label_stop)
             self.set_icon(self.onIcon)
 
-        # Now we are in RUNNING state → start fade
-        self.effect.setOpacity(1.0)
-        self.fade_anim.stop()
-        self.fade_anim.start()
-        self.heartbeat_timer.stop()
-        self.heartbeat_timer.start()
+        self.fader.start_heartbeat()
 
 
     def on_missed_heartbeat(self):
@@ -140,5 +120,6 @@ class ToggleProcessButton(QPushButton):
 
 
     def has_heartbeat(self):
-        return self.heartbeat_key is not None and self.effect is not None
+        return self.heartbeat_key is not None
+
 

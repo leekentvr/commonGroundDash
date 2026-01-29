@@ -9,11 +9,12 @@ from PySide6.QtWidgets import ( # type: ignore
     QPushButton, QLineEdit, QListWidget, QLabel, QComboBox, 
     QGroupBox
 )
-from PySide6.QtCore import QFileSystemWatcher, Signal, QPropertyAnimation
+from PySide6.QtCore import QFileSystemWatcher, Signal, QPropertyAnimation, QTimer
 from PySide6.QtGui import QPixmap
 from toggleProcessButton import ToggleProcessButton
 from zenoh_manager import ZenohManager
 from process_manager import ProcessManager
+from heartbeat_Fader import HeartbeatFader, HeartbeatIcon
 
 class Dashboard(QWidget):
     roomname = "null"
@@ -45,13 +46,15 @@ class Dashboard(QWidget):
         self.zenoh.message_received.connect(self.on_message)
 
         main_layout = QVBoxLayout()
-        
-        # region 1. Configuration Group
 
+        # -----------------------------
+        # region 1. Configuration Group
+        # -----------------------------
         config_group = QGroupBox("Configuration and Calibration")
         config_layout_v = QVBoxLayout()
 
         self.open_config_btn = QPushButton("Open Config File")
+        self.open_config_btn.setMinimumSize(0,52)
         self.open_config_btn.clicked.connect(self.open_config_file)
 
         self.svr_btn = ToggleProcessButton(
@@ -100,8 +103,9 @@ class Dashboard(QWidget):
         main_layout.addWidget(config_group)
         # endregion
 
+        # -----------------------------
         # region 2. Device Processor Group
-
+        # -----------------------------
         device_group = QGroupBox("Device Processor")
         device_layout = QVBoxLayout()
 
@@ -123,8 +127,10 @@ class Dashboard(QWidget):
         device_group.setLayout(device_layout)
         main_layout.addWidget(device_group)
         # endregion
-        
+
+        # -----------------------------
         # region 3. Unity App Group
+        # -----------------------------
         unity_group = QGroupBox("Unity Commonground App")
         unity_layout = QVBoxLayout()
         
@@ -147,9 +153,11 @@ class Dashboard(QWidget):
         main_layout.addWidget(unity_group)
         # endregion
 
+        # -----------------------------
         # region 4. Middleware Processor Group
+        # -----------------------------
         middleware_group = QGroupBox("Middleware Processor")
-        middleware_layout = QVBoxLayout()
+        middleware_layout = QHBoxLayout()
 
         middle_exe_path = os.path.join(
             self.commonground_path,
@@ -163,20 +171,29 @@ class Dashboard(QWidget):
             manager=self.processManager,
             exe_path=middle_exe_path,
             add_room=False,
-            identifier="mp", 
+            identifier="mw", 
             onIcon="greenHeart.png",
             offIcon="redStop.png",
-            heartbeat_key="cg/" + self.roomname + "/mp/hb"
+            heartbeat_key="cg/" + self.roomname + "/mw/mw/hb"
         )
-
         self.zenoh.route(self.mp_btn.heartbeat_key, self.mp_btn.on_heartbeat)
 
+        self.server_hb_icon = HeartbeatIcon(self.zenoh, "cg/" + self.roomname + "/mw/se/hb", "assets/" + "greenHeartTop.png", "assets/" + "redStopTop.png")
+        self.server_hb_icon.setMaximumSize(64, 74)
+        self.cg_hb_icon = HeartbeatIcon(self.zenoh, "cg/" + self.roomname + "/mw/cg/hb", "assets/" + "greenHeartBottom.png", "assets/" + "redStopBottom.png")
+        self.cg_hb_icon.setMaximumSize(64, 74)
+
         middleware_layout.addWidget(self.mp_btn)
+        middleware_layout.addWidget(self.server_hb_icon)
+        middleware_layout.addWidget(self.cg_hb_icon)
+
         middleware_group.setLayout(middleware_layout)
         main_layout.addWidget(middleware_group)
         #endregion
-
+        
+        # -----------------------------
         # region 5. Server Group
+        # -----------------------------
         server_group = QGroupBox("Server")
         server_layout = QHBoxLayout()
 
@@ -211,8 +228,9 @@ class Dashboard(QWidget):
         main_layout.addWidget(server_group)
         #endregion
 
-
+        # -----------------------------
         # region 6. Publisher Group
+        # -----------------------------
         pub_group = QGroupBox("Publisher")
         pub_layout = QHBoxLayout()
 
@@ -236,8 +254,9 @@ class Dashboard(QWidget):
         main_layout.addWidget(pub_group)
         # endregion
 
+        # -----------------------------
         # region 7. Zenoh Debugging Group
-
+        # -----------------------------
         self.log_group = QGroupBox("Received Messages")
         log_layout = QVBoxLayout()
 
@@ -251,8 +270,9 @@ class Dashboard(QWidget):
         self.set_groupbox_visible(self.log_group, False)
         # endregion
 
+        # -----------------------------
         # Final Layout
-
+        # -----------------------------
         self.setLayout(main_layout)
 
         # Subscribe to all keys
@@ -339,7 +359,14 @@ class Dashboard(QWidget):
             self.room_status_label.setStyleSheet("color: red;")
 
         self.animate_status_change(self.room_status_label)
-        
+
+def closeEvent(self, event):
+    # Stop timers
+    for timer in self.findChildren(QTimer):
+        timer.stop()
+
+    QApplication.quit()
+
 def main():
     app = QApplication(sys.argv)
     ui = Dashboard()

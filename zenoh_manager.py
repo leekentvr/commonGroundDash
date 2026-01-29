@@ -29,8 +29,6 @@ class ZenohManager(QObject):
 
         self.subscribe(key)
 
-
-
     def subscribe(self, key):
         if key in self.subscribers:
             return
