@@ -36,7 +36,7 @@ class Dashboard(QWidget):
 
         self.roomname = self.getRoomName()
 
-        self.deviceProcManager = ProcessManager(
+        self.processManager = ProcessManager(
             log_callback=lambda msg: self.list_widget.addItem(msg),
             get_roomname_callback=self.getRoomName
         )
@@ -46,7 +46,7 @@ class Dashboard(QWidget):
 
         main_layout = QVBoxLayout()
         
-        # 1. Configuration Group
+        # region 1. Configuration Group
 
         config_group = QGroupBox("Configuration and Calibration")
         config_layout_v = QVBoxLayout()
@@ -57,19 +57,19 @@ class Dashboard(QWidget):
         self.svr_btn = ToggleProcessButton(
             label_start="Start SteamVR",
             label_stop="Stop SteamVR",
-            manager=self.deviceProcManager,
+            manager=self.processManager,
             exe_path=self.commonground_path + r"1.1 SteamVR\SteamVR\bin\win64\\vrstartup.exe",
             add_room=False,
             identifier="SVR",
-            onIcon="steamvrOn.png",
-            offIcon="steamvrOff.png",
+            onIcon=None,
+            offIcon=None,
             heartbeat_key=""
         )
 
         self.calib_btn = ToggleProcessButton(
             label_start="Start Calibration App",
             label_stop="Stop Calibration App",
-            manager=self.deviceProcManager,
+            manager=self.processManager,
             exe_path=self.commonground_path + r"1.1 SteamVR\SteamVR\bin\win64\\vrstartup.exe",
             add_room=False,
             identifier="CA", 
@@ -91,20 +91,16 @@ class Dashboard(QWidget):
         config_layout_h.addWidget(self.room_status_label)
         config_layout_h.addStretch()
 
-        self.lock_calib_btn = QPushButton("Lock Calibration")
-        self.lock_calib_btn.clicked.connect(self.lockConfiguration)     
-
         config_layout_v.addWidget(self.open_config_btn)
         config_layout_v.addWidget(self.svr_btn)
         config_layout_v.addWidget(self.calib_btn)
         config_layout_v.addLayout(config_layout_h)
-        config_layout_v.addWidget(self.lock_calib_btn)
    
         config_group.setLayout(config_layout_v)
         main_layout.addWidget(config_group)
         # endregion
 
-        # 2. Device Processor Group
+        # region 2. Device Processor Group
 
         device_group = QGroupBox("Device Processor")
         device_layout = QVBoxLayout()
@@ -112,7 +108,7 @@ class Dashboard(QWidget):
         self.dp_btn = ToggleProcessButton(
             label_start="Start Device Processor",
             label_stop="Stop Device Processor",
-            manager=self.deviceProcManager,
+            manager=self.processManager,
             exe_path=self.commonground_path + r"DeviceProcessing\\HelloKinect.exe",
             add_room=True,
             identifier="DP", 
@@ -128,16 +124,14 @@ class Dashboard(QWidget):
         main_layout.addWidget(device_group)
         # endregion
         
-
-        
-        # 3. Unity App Group
+        # region 3. Unity App Group
         unity_group = QGroupBox("Unity Commonground App")
         unity_layout = QVBoxLayout()
         
         self.ua_btn = ToggleProcessButton(
             label_start="Start Unity Commonground App",
             label_stop="Stop Unity Commonground App",
-            manager=self.deviceProcManager,
+            manager=self.processManager,
             exe_path=self.commonground_path + r"3. Unity CommonGround\CommonGround.exe", # TODO: Update path
             add_room=False,
             identifier="ua", 
@@ -153,12 +147,11 @@ class Dashboard(QWidget):
         main_layout.addWidget(unity_group)
         # endregion
 
-
-        # 4. Middleware Processor Group
+        # region 4. Middleware Processor Group
         middleware_group = QGroupBox("Middleware Processor")
         middleware_layout = QVBoxLayout()
 
-        this_exe_path = os.path.join(
+        middle_exe_path = os.path.join(
             self.commonground_path,
             "5. RoomClient Middleware",
             "start_avatar_manager_QWS - _searchrange - newbuild.bat"
@@ -167,8 +160,8 @@ class Dashboard(QWidget):
         self.mp_btn = ToggleProcessButton(
             label_start="Start Middleware Processor",
             label_stop="Stop Middleware Processor",
-            manager=self.deviceProcManager,
-            exe_path=this_exe_path,
+            manager=self.processManager,
+            exe_path=middle_exe_path,
             add_room=False,
             identifier="mp", 
             onIcon="greenHeart.png",
@@ -183,7 +176,43 @@ class Dashboard(QWidget):
         main_layout.addWidget(middleware_group)
         #endregion
 
-        # 5. Publisher Group
+        # region 5. Server Group
+        server_group = QGroupBox("Server")
+        server_layout = QHBoxLayout()
+
+        # TODO: add server heartbeat from start
+
+        self.start_server_btn = QPushButton("Start Server")
+        self.start_server_btn.clicked.connect(lambda: self.processManager.run_exe(
+            exe_path=os.path.join(
+                self.commonground_path,
+                "ServerStartStop",
+                "start-ec2.bat"
+            ),
+            add_room=False,
+            identifier="se"
+        ))
+
+        self.stop_server_btn = QPushButton("Stop Server")
+        self.stop_server_btn.clicked.connect(lambda: self.processManager.run_exe(
+            exe_path=os.path.join(
+                self.commonground_path,
+                "ServerStartStop",
+                "stop-ec2.bat"
+            ),
+            add_room=False,
+            identifier="se"
+        ))
+
+        server_layout.addWidget(self.start_server_btn)
+        server_layout.addWidget(self.stop_server_btn)
+
+        server_group.setLayout(server_layout)
+        main_layout.addWidget(server_group)
+        #endregion
+
+
+        # region 6. Publisher Group
         pub_group = QGroupBox("Publisher")
         pub_layout = QHBoxLayout()
 
@@ -207,7 +236,7 @@ class Dashboard(QWidget):
         main_layout.addWidget(pub_group)
         # endregion
 
-        # 2. Message Log Group
+        # region 7. Zenoh Debugging Group
 
         self.log_group = QGroupBox("Received Messages")
         log_layout = QVBoxLayout()
@@ -298,25 +327,18 @@ class Dashboard(QWidget):
 
 
     def update_room_status(self, roomname: str):
-        exists, line_count, filepath = self.get_room_file_info(roomname)
+        exists, line_count, filepath = self.get_room_file_info(self.getRoomName())
 
         if exists: # Room is good, update other config files
             self.room_icon_label.setPixmap(QPixmap("assets/greenHeart.png"))
             self.room_status_label.setText(f"   {line_count} devices in room file.")
             self.room_status_label.setStyleSheet("color: green;")
-            self.lockConfiguration()
         else:
             self.room_icon_label.setPixmap(QPixmap("assets/redStop.png"))
             self.room_status_label.setText("   No room file found.")
             self.room_status_label.setStyleSheet("color: red;")
 
         self.animate_status_change(self.room_status_label)
-
-    def lockConfiguration(self):
-        self.svr_btn.setVisible(False)
-        self.calib_btn.setVisible(False)
-        self.lock_calib_btn.setVisible(False)
-        self.set_groupbox_visible(self.log_group, True)
         
 def main():
     app = QApplication(sys.argv)

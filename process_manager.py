@@ -25,10 +25,11 @@ class ProcessManager:
                     creationflags=subprocess.CREATE_NEW_CONSOLE
                 )
 
-            self.processes.append({
-                "proc": self.proc,
-                "id": identifier
-            })
+            if(identifier != "se"):
+                self.processes.append({
+                    "proc": self.proc,
+                    "id": identifier
+                })
 
             self.log(f"[INFO] Started {identifier} (PID={self.proc.pid})")
         except Exception as e:
