@@ -154,7 +154,7 @@ class Dashboard(QWidget):
             identifier="ua", 
             onIcon="greenHeart.png",
             offIcon="redStop.png",
-            heartbeat_key="cg/" + self.roomname + "/ua/hb"
+            heartbeat_key="cg/" + self.roomname + "/cg/hb"
         )
 
         self.zenoh.route(self.ua_btn.heartbeat_key, self.ua_btn.on_heartbeat)
@@ -190,10 +190,10 @@ class Dashboard(QWidget):
         self.zenoh.route(self.mp_btn.heartbeat_key, self.mp_btn.on_heartbeat)
 
         self.cg_hb_icon = HeartbeatIcon(self.zenoh, "cg/" + self.roomname + "/mw/cg/hb", "assets/" + "greenHeartBottom.png", "assets/" + "redStopBottom.png")
-        self.cg_hb_icon.setMaximumSize(64, 74)
+        self.cg_hb_icon.setFixedSize(64, 74)
 
         self.server_hb_icon = HeartbeatIcon(self.zenoh, "cg/" + self.roomname + "/mw/se/hb", "assets/" + "greenHeartTop.png", "assets/" + "redStopTop.png")
-        self.server_hb_icon.setMaximumSize(64, 74)
+        self.server_hb_icon.setFixedSize(64, 74)
 
         middleware_layout.addWidget(self.mp_btn)
         middleware_layout.addWidget(self.cg_hb_icon)
@@ -263,7 +263,7 @@ class Dashboard(QWidget):
         pub_layout.addWidget(QLabel("Select Key:"))
         pub_layout.addWidget(self.key_selector)
         pub_group.setLayout(pub_layout)
-        main_layout.addWidget(pub_group)
+        # main_layout.addWidget(pub_group)
         # endregion
 
         # -----------------------------
@@ -277,7 +277,7 @@ class Dashboard(QWidget):
 
         log_layout.addWidget(self.list_widget)
         self.log_group.setLayout(log_layout)
-        main_layout.addWidget(self.log_group)    
+        #main_layout.addWidget(self.log_group)    
 
         self.set_groupbox_visible(self.log_group, False)
         # endregion
