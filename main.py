@@ -10,21 +10,28 @@ from PySide6.QtWidgets import ( # type: ignore
     QGroupBox
 )
 from PySide6.QtCore import QFileSystemWatcher, Signal, QPropertyAnimation, QTimer
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QIcon
 from toggleProcessButton import ToggleProcessButton
 from zenoh_manager import ZenohManager
 from process_manager import ProcessManager
-from heartbeat_Fader import HeartbeatFader, HeartbeatIcon
+from heartbeat_Fader import HeartbeatIcon
+
+
+
 
 class Dashboard(QWidget):
     roomname = "null"
     room_changed = Signal(str)
     number_of_devices = 0
-
+    
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Common Ground Dashboard")
         self.resize(500, 400)
+
+        self.setWindowIcon(QIcon("assets/logologomini.png"))
+        self.stylesheet = self.load_stylesheet("style.qss")
+        self.setStyleSheet(self.stylesheet)
 
         self.commonground_path = r"C:\\CommonGround\\"
         
@@ -292,6 +299,9 @@ class Dashboard(QWidget):
             self.zenoh.subscribe(key)
         self.room_changed.emit(self.roomname)
 
+    def load_stylesheet(self,path):
+        with open(path, "r") as f:
+            return f.read()
 
     def on_message(self, key, payload):
         self.list_widget.addItem(f"[{key}] {payload}")
@@ -387,7 +397,7 @@ class Dashboard(QWidget):
         if exists: # Room is good, update other config files
             self.room_icon_label.setPixmap(QPixmap("assets/greenHeart.png"))
             self.room_status_label.setText(f"   {line_count} devices in room file.")
-            self.room_status_label.setStyleSheet("color: green;")
+            self.room_status_label.setStyleSheet("color: Limegreen;")
         else:
             self.room_icon_label.setPixmap(QPixmap("assets/redStop.png"))
             self.room_status_label.setText("   No room file found.")
@@ -404,6 +414,7 @@ def closeEvent(self, event):
 
 def main():
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon("assets/logomini.png"))
     ui = Dashboard()
     ui.show()
     sys.exit(app.exec())

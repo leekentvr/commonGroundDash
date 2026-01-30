@@ -1,0 +1,22 @@
+QPushButton {
+    background-color: #DDDDDD;       /* Soft neutral grey */
+    color: black;                    /* High contrast text */
+    border: 1px solid #555555;       /* Medium grey border */
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #C0C0C0;       /* Slightly darker on hover */
+}
+
+QPushButton:pressed {
+    background-color: #A0A0A0;       /* Even darker when pressed */
+}
+
+QPushButton:disabled {
+    background-color: #F0F0F0;
+    color: #999999;
+    border: 1px solid #CCCCCC;
+}
