@@ -27,6 +27,7 @@ class HeartbeatIcon(QWidget):
         zenoh.route(key, self.on_heartbeat)
 
     def on_heartbeat(self, payload):
+        self.fader.stop()  # optional: fully cancel fade
         self.label.setPixmap(QPixmap(self.on_icon).scaled(32, 64))
         self.fader.start_heartbeat()
 
@@ -69,11 +70,10 @@ class HeartbeatFader:
 
     def start_heartbeat(self):
         """Call this whenever a heartbeat is received."""
-        self.effect.setOpacity(1.0)
         self.fade_anim.stop()
-        self.fade_anim.start()
         self.fade_anim.setCurrentTime(0) 
-        
+        self.effect.setOpacity(1.0)
+        self.fade_anim.start()
         self.heartbeat_timer.stop()
         self.heartbeat_timer.start()
 

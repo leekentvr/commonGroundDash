@@ -62,7 +62,7 @@ class Dashboard(QWidget):
             label_start="Start SteamVR",
             label_stop="Stop SteamVR",
             manager=self.processManager,
-            exe_path=self.commonground_path + r"1.1 SteamVR\SteamVR\bin\win64\\vrstartup.exe",
+            exe_path=self.commonground_path + r"1. SteamVR\SteamVR\bin\win64\\vrstartup.exe",
             add_room=False,
             identifier="SVR",
             onIcon=None,
@@ -74,7 +74,7 @@ class Dashboard(QWidget):
             label_start="Start Calibration App",
             label_stop="Stop Calibration App",
             manager=self.processManager,
-            exe_path=self.commonground_path + r"1.1 SteamVR\SteamVR\bin\win64\\vrstartup.exe",
+            exe_path=self.commonground_path + r"1. TrackerApp\Builds\\CameraCalibration.exe",
             add_room=False,
             identifier="CA", 
             onIcon=None,
@@ -124,7 +124,7 @@ class Dashboard(QWidget):
             label_start="Start Device Processor",
             label_stop="Stop Device Processor",
             manager=self.processManager,
-            exe_path=self.commonground_path + r"DeviceProcessing\\HelloKinect.exe",
+            exe_path=self.commonground_path + r"2. DeviceProcessing\\HelloKinect.exe",
             add_room=True,
             identifier="DP", 
             onIcon="greenHeart.png",
@@ -149,7 +149,7 @@ class Dashboard(QWidget):
             label_start="Start Unity Commonground App",
             label_stop="Stop Unity Commonground App",
             manager=self.processManager,
-            exe_path=self.commonground_path + r"3. CommonGroundSF\CommonGroundSF.exe", # TODO: Update path
+            exe_path=self.commonground_path + r"3. CommonGroundSF\CommonGroundSF.exe", 
             add_room=False,
             identifier="ua", 
             onIcon="greenHeart.png",
@@ -215,7 +215,7 @@ class Dashboard(QWidget):
         self.start_server_btn.clicked.connect(lambda: self.processManager.run_exe(
             exe_path=os.path.join(
                 self.commonground_path,
-                "ServerStartStop",
+                "4. ServerStartStop",
                 "start-ec2.bat"
             ),
             add_room=False,
@@ -226,7 +226,7 @@ class Dashboard(QWidget):
         self.stop_server_btn.clicked.connect(lambda: self.processManager.run_exe(
             exe_path=os.path.join(
                 self.commonground_path,
-                "ServerStartStop",
+                "4. ServerStartStop",
                 "stop-ec2.bat"
             ),
             add_room=False,
