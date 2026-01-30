@@ -16,9 +16,6 @@ from zenoh_manager import ZenohManager
 from process_manager import ProcessManager
 from heartbeat_Fader import HeartbeatIcon
 
-
-
-
 class Dashboard(QWidget):
     roomname = "null"
     room_changed = Signal(str)
@@ -29,7 +26,7 @@ class Dashboard(QWidget):
         self.setWindowTitle("Common Ground Dashboard")
         self.resize(500, 400)
 
-        self.setWindowIcon(QIcon("assets/logologomini.png"))
+        self.setWindowIcon(QIcon("assets/logomini.png"))
         self.stylesheet = self.load_stylesheet("style.qss")
         self.setStyleSheet(self.stylesheet)
 
@@ -72,9 +69,7 @@ class Dashboard(QWidget):
             exe_path=self.commonground_path + r"1. SteamVR\SteamVR\bin\win64\\vrstartup.exe",
             add_room=False,
             identifier="SVR",
-            onIcon=None,
-            offIcon=None,
-            heartbeat_key=""
+            heartbeat_key=None
         )
 
         self.calib_btn = ToggleProcessButton(
@@ -83,10 +78,8 @@ class Dashboard(QWidget):
             manager=self.processManager,
             exe_path=self.commonground_path + r"1. TrackerApp\Builds\\CameraCalibration.exe",
             add_room=False,
-            identifier="CA", 
-            onIcon=None,
-            offIcon=None,
-            heartbeat_key=""
+            identifier="CA",
+            heartbeat_key=None
         )
     
         config_layout_v.addWidget(self.open_config_btn)
@@ -133,10 +126,9 @@ class Dashboard(QWidget):
             manager=self.processManager,
             exe_path=self.commonground_path + r"2. DeviceProcessing\\HelloKinect.exe",
             add_room=True,
-            identifier="DP", 
-            onIcon="greenHeart.png",
-            offIcon="redStop.png",
-            heartbeat_key="cg/" + self.roomname + "/dp/hb"
+            identifier="DP",
+            heartbeat_key="cg/" + self.roomname + "/dp/hb",
+            zenoh=self.zenoh
         )
 
         self.zenoh.route(self.dp_btn.heartbeat_key, self.dp_btn.on_heartbeat)
@@ -159,9 +151,8 @@ class Dashboard(QWidget):
             exe_path=self.commonground_path + r"3. CommonGroundSF\CommonGroundSF.exe", 
             add_room=False,
             identifier="ua", 
-            onIcon="greenHeart.png",
-            offIcon="redStop.png",
-            heartbeat_key="cg/" + self.roomname + "/cg/hb"
+            heartbeat_key="cg/" + self.roomname + "/cg/hb",
+            zenoh=self.zenoh
         )
 
         self.zenoh.route(self.ua_btn.heartbeat_key, self.ua_btn.on_heartbeat)
@@ -189,10 +180,9 @@ class Dashboard(QWidget):
             manager=self.processManager,
             exe_path=middle_exe_path,
             add_room=False,
-            identifier="mw", 
-            onIcon="greenHeart.png",
-            offIcon="redStop.png",
-            heartbeat_key="cg/" + self.roomname + "/mw/mw/hb"
+            identifier="mw",
+            heartbeat_key="cg/" + self.roomname + "/mw/mw/hb",
+            zenoh=self.zenoh
         )
         self.zenoh.route(self.mp_btn.heartbeat_key, self.mp_btn.on_heartbeat)
 

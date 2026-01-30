@@ -4,7 +4,7 @@ from PySide6.QtCore import QPropertyAnimation, QEasingCurve, QTimer, QSize
 from heartbeat_Fader import HeartbeatFader
 
 class ToggleProcessButton(QPushButton):
-    def __init__(self, label_start, label_stop, manager, exe_path, add_room, identifier, onIcon, offIcon, heartbeat_key):
+    def __init__(self, label_start, label_stop, manager, exe_path, add_room, identifier, heartbeat_key, zenoh=None):
         super().__init__(label_start)
 
         self.label_start = label_start
@@ -13,10 +13,10 @@ class ToggleProcessButton(QPushButton):
         self.exe_path = exe_path
         self.add_room = add_room
         self.identifier = identifier
-        self.onIcon = onIcon
-        self.offIcon = offIcon
+        self.onIcon = "greenHeart.png"
+        self.offIcon = "redStop.png"
         self.heartbeat_key = heartbeat_key or None
-
+        self.zenoh = zenoh
         self.icon_label = QLabel(self)
         self.icon_label.setFixedSize(32, 32)
         self.icon_label.move(15, 10)  # adjust position as needed
@@ -29,6 +29,8 @@ class ToggleProcessButton(QPushButton):
 
         if self.heartbeat_key:
             self._init_heartbeat_system()
+            zenoh.route(self.heartbeat_key, self.on_heartbeat)
+
             
         self.clicked.connect(self.on_click)
 
