@@ -15,6 +15,7 @@ from toggleProcessButton import ToggleProcessButton
 from zenoh_manager import ZenohManager
 from process_manager import ProcessManager
 from heartbeat_Fader import HeartbeatIcon
+import loadConfigFile
 
 class Dashboard(QWidget):
     roomname = "null"
@@ -42,7 +43,7 @@ class Dashboard(QWidget):
         self.roomname = self.getRoomName()
 
         self.processManager = ProcessManager(
-            log_callback=lambda msg: self.list_widget.addItem(msg),
+            log_callback=lambda msg: (print(msg), self.list_widget.addItem(msg)),
             get_roomname_callback=self.getRoomName
         )
 
@@ -104,7 +105,8 @@ class Dashboard(QWidget):
 
         config_layout_h = QHBoxLayout()
         config_layout_h.addStretch()
-        config_layout_h.addWidget(QLabel("Current room '" + self.roomname + "'   "))
+        self.thisroomLabel = QLabel("Current room '" + self.roomname + "'   ")
+        config_layout_h.addWidget(self.thisroomLabel)
         config_layout_h.addWidget(self.room_icon_label)
         config_layout_h.addWidget(self.room_status_label)
         config_layout_h.addStretch()
@@ -168,17 +170,16 @@ class Dashboard(QWidget):
         middleware_group = QGroupBox("Middleware Processor")
         middleware_layout = QHBoxLayout()
 
-        middle_exe_path = os.path.join(
+        middle_bat_path = os.path.join(
             self.commonground_path,
-            "5. RoomClient Middleware",
-            "start_avatar_manager.bat"
+            "5. RoomClient Middleware"
         )
 
         self.mp_btn = ToggleProcessButton(
             label_start="Start Middleware Processor",
             label_stop="Stop Middleware Processor",
             manager=self.processManager,
-            exe_path=middle_exe_path,
+            exe_path=middle_bat_path,
             add_room=False,
             identifier="mw",
             heartbeat_key="cg/" + self.roomname + "/mw/mw/hb",
@@ -385,6 +386,7 @@ class Dashboard(QWidget):
         exists, line_count, filepath = self.get_room_file_info(self.getRoomName())
 
         if exists: # Room is good, update other config files
+            self.thisroomLabel.setText("Current room '" + roomname + "'   ")
             self.room_icon_label.setPixmap(QPixmap("assets/greenHeart.png"))
             self.room_status_label.setText(f"   {line_count} devices in room file.")
             self.room_status_label.setStyleSheet("color: Limegreen;")
