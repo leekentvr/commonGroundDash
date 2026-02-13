@@ -10,7 +10,7 @@ class ProcessManager:
         self.processes = []   # store running processes
 
     def run_exe(self, exe_path, add_room, identifier):
-
+        params = []
         if (identifier == "mw"):
             bat_path = os.path.join(
             exe_path,
