@@ -13,6 +13,7 @@ Thumbs.db
 # IDE files
 .vscode/
 .idea/
+.vs/
 
 # Logs
 *.log
