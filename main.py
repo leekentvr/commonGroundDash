@@ -67,7 +67,7 @@ class Dashboard(QWidget):
             label_start="Start SteamVR",
             label_stop="Stop SteamVR",
             manager=self.processManager,
-            exe_path=self.commonground_path + r"1. SteamVR\SteamVR\bin\win64\\vrstartup.exe",
+            exe_path=self.commonground_path + r"1.1 SteamVR\SteamVR\bin\win64\\vrstartup.exe",
             add_room=False,
             identifier="SVR",
             heartbeat_key=None
