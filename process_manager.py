@@ -26,6 +26,9 @@ class ProcessManager:
             print(exe_path)
             print(params)
 
+        if identifier == "SVR":
+            params = ["-forcedDriver", "null"]
+
         if not os.path.exists(exe_path):
             self.log(f"[ERROR] exe file not found: {exe_path}")
             return
