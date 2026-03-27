@@ -77,7 +77,7 @@ class Dashboard(QWidget):
             label_start="Start Calibration App",
             label_stop="Stop Calibration App",
             manager=self.processManager,
-            exe_path=self.commonground_path + r"1. TrackerApp\Builds\\CameraCalibration.exe",
+            exe_path=self.commonground_path + r"1. TrackerApp\\CameraCalibration.exe",
             add_room=False,
             identifier="CA",
             heartbeat_key=None
