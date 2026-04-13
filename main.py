@@ -321,6 +321,22 @@ class Dashboard(QWidget):
         except (OSError, json.JSONDecodeError):
             return "null"
 
+    def getServerAddr(self):
+        try:
+            with open(self.commonground_path + r"cgconfig.cfg") as f:
+                cfg = json.load(f)
+            return cfg.get("serverIP", "null")
+        except (OSError, json.JSONDecodeError):
+            return "null"
+
+    def getServerPort(self):
+        try:
+            with open(self.commonground_path + r"cgconfig.cfg") as f:
+                cfg = json.load(f)
+            return cfg.get("serverPort", "null")
+        except (OSError, json.JSONDecodeError):
+            return "null"
+
     def on_config_changed(self, path):
         new_room = self.getRoomName()
         self.roomname = new_room
@@ -339,13 +355,19 @@ class Dashboard(QWidget):
                 # Found a room in the config
                 line_count = sum(1 for line in f if line.strip()) - 1  # and subtract header
                 path = Path(self.commonground_path) / "5. RoomClient Middleware" / "start_avatar_manager.bat"
-                self.update_bat_file(path, roomname=self.getRoomName(), areaManagerID=self.getAreaManagerID())
+                self.update_bat_file(
+                    path,
+                    roomname=self.getRoomName(),
+                    areaManagerID=self.getAreaManagerID(),
+                    serverAddr=self.getServerAddr(),
+                    serverPort=self.getServerPort()
+                )
 
         except Exception:
             return False, 0, filepath
         return True, line_count, filepath
     
-    def update_bat_file(self, path, roomname, areaManagerID):
+    def update_bat_file(self, path, roomname, areaManagerID, serverAddr, serverPort):
         with open(path, "r") as f:
             lines = f.readlines()
         new_lines = []
@@ -354,6 +376,10 @@ class Dashboard(QWidget):
                 new_lines.append(f"set zenoh_key_expr={roomname}\n")
             elif line.strip().startswith("set area_manager_id="):
                 new_lines.append(f"set area_manager_id={areaManagerID}\n")
+            elif line.strip().startswith("set server_addr=") and serverAddr:
+                new_lines.append(f"set server_addr={serverAddr}\n")
+            elif line.strip().startswith("set server_port="):
+                new_lines.append(f"set server_port={serverPort}\n")
             else:
                 new_lines.append(line)
 
