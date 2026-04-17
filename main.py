@@ -16,6 +16,7 @@ from zenoh_manager import ZenohManager
 from process_manager import ProcessManager
 from heartbeat_Fader import HeartbeatIcon
 import loadConfigFile
+import setupSteamVR
 
 class Dashboard(QWidget):
     roomname = "null"
@@ -54,20 +55,62 @@ class Dashboard(QWidget):
 
         # -----------------------------
         # region 1. Configuration Group
+        #   A OpenConfig File
+        #   B Show current room and status
+        #   C Check SteamVR Version + Null Driver status
+        #   D Start/Stop SteamVR and Calibration App
         # -----------------------------
         config_group = QGroupBox("Configuration and Calibration")
         config_layout_v = QVBoxLayout()
+        config_layout_hB = QHBoxLayout()
+        config_layout_hC = QHBoxLayout()
+        config_layout_hD = QHBoxLayout()
 
+        # A OpenConfig File
         self.open_config_btn = QPushButton("Open Config File")
         self.open_config_btn.setMinimumSize(0,52)
         self.open_config_btn.clicked.connect(self.open_config_file)
 
-        config_layout_hTOP = QHBoxLayout()
+        self.room_icon_label = QLabel()
+        self.room_icon_label.setFixedSize(32, 32) 
+        self.steamvr_icon_label = QLabel()
+        self.steamvr_icon_label.setFixedSize(32, 32) 
+
+        self.room_status_label = QLabel("Checking...")
+        self.room_status_label.setStyleSheet("font-weight: bold;")
+
+        # B Show current room and status
+        config_layout_hB = QHBoxLayout()
+        config_layout_hB.addStretch()
+        self.thisroomLabel = QLabel("Current room '" + self.roomname + "'   ")
+        self.thisroomLabel.setFixedHeight(48)
+        config_layout_hB.addWidget(self.thisroomLabel)
+        config_layout_hB.addWidget(self.room_icon_label)
+        config_layout_hB.addWidget(self.room_status_label)
+        config_layout_hB.addStretch()
+
+        # C check SteamVR version and null driver status
+        config_layout_hC = QHBoxLayout()
+        config_layout_hC.addStretch()
+        self.steamvr_version_label = QLabel("SteamVR Check: ")
+        self.steamvr_version_label.setFixedHeight(48)
+        config_layout_hC.addWidget(self.steamvr_version_label)
+        config_layout_hC.addWidget(self.steamvr_icon_label)
+        config_layout_hC.addStretch()
+
+        self.check_steamvr_btn = QPushButton("Prepare SteamVR")
+        self.check_steamvr_btn.setMinimumSize(0,52)
+        self.check_steamvr_btn.clicked.connect(self.updateSteamVR)
+        config_layout_hC.addWidget(self.check_steamvr_btn)
+
+        config_layout_hC.addStretch()
+
+        # D Start/Stop SteamVR and Calibration App
         self.svr_btn = ToggleProcessButton(
             label_start="Start SteamVR",
             label_stop="Stop SteamVR",
             manager=self.processManager,
-            exe_path=self.commonground_path + r"1.1 SteamVR\bin\win64\\vrstartup.exe",
+            exe_path=r"C:\Program Files (x86)\Steam\steamapps\common\SteamVR\bin\win64\\vrstartup.exe",
             add_room=False,
             identifier="SVR",
             heartbeat_key=None
@@ -84,37 +127,16 @@ class Dashboard(QWidget):
         )
     
         config_layout_v.addWidget(self.open_config_btn)
-        config_layout_hTOP.addWidget(self.svr_btn)
-        config_layout_hTOP.addWidget(self.calib_btn)
-        config_layout_v.addLayout(config_layout_hTOP)
+        config_layout_hD.addWidget(self.svr_btn)
+        config_layout_hD.addWidget(self.calib_btn)
+        
+        config_layout_v.addLayout(config_layout_hB)
+        config_layout_v.addLayout(config_layout_hC)
+        config_layout_v.addLayout(config_layout_hD)
         
    
         config_group.setLayout(config_layout_v)
         main_layout.addWidget(config_group)
-        # -----------------------------
-        # region 1.5. Current Configuration Group
-        # -----------------------------
-
-        current_group = QGroupBox("Current Configuration")
-
-        self.room_icon_label = QLabel()
-        self.room_icon_label.setFixedSize(32, 32) 
-
-        self.room_status_label = QLabel("Checking...")
-        self.room_status_label.setStyleSheet("font-weight: bold;")
-
-        config_layout_h = QHBoxLayout()
-        config_layout_h.addStretch()
-        self.thisroomLabel = QLabel("Current room '" + self.roomname + "'   ")
-        config_layout_h.addWidget(self.thisroomLabel)
-        config_layout_h.addWidget(self.room_icon_label)
-        config_layout_h.addWidget(self.room_status_label)
-        config_layout_h.addStretch()
-
-        current_group.setLayout(config_layout_h)
-        main_layout.addWidget(current_group)
-
-        # endregion
 
         # -----------------------------
         # region 2. Device Processor Group
@@ -207,7 +229,7 @@ class Dashboard(QWidget):
         server_group = QGroupBox("Server")
         server_layout = QHBoxLayout()
 
-        # TODO: trigger server heartbeat from start
+        # TODO: check for server heartbeat on start
 
         self.start_server_btn = QPushButton("Start Server")
         self.start_server_btn.clicked.connect(lambda: self.processManager.run_exe(
@@ -288,7 +310,9 @@ class Dashboard(QWidget):
         # Subscribe to all keys
         for key in [self.key_selector.itemText(i) for i in range(self.key_selector.count())]:
             self.zenoh.subscribe(key)
+        self.check_steamvr_status()
         self.room_changed.emit(self.roomname)
+
 
     def load_stylesheet(self,path):
         with open(path, "r") as f:
@@ -385,6 +409,20 @@ class Dashboard(QWidget):
 
         with open(path, "w") as f:
             f.writelines(new_lines)
+
+    def updateSteamVR(self):
+        if(setupSteamVR.get_runtime_status(setupSteamVR.RUNTIME_DIR) == False):
+            setupSteamVR.setup_steamvr()
+        else:
+            # reset steamvr (just unfreeze and re-apply config to be safe)
+            setupSteamVR.unfreeze()
+
+    def check_steamvr_status(self):
+        # True means CG ready, False means not ready
+        if(setupSteamVR.get_runtime_status(setupSteamVR.RUNTIME_DIR) == True):
+            self.steamvr_icon_label.setPixmap(QPixmap("assets/greenHeart.png"))
+        else:
+            self.steamvr_icon_label.setPixmap(QPixmap("assets/redStop.png"))
 
     def open_config_file(self):
         config_path = Path(self.commonground_path) / "cgconfig.cfg"
