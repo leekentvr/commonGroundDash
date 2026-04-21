@@ -4,8 +4,6 @@ from os import path
 import subprocess
 import shutil
 import stat
-
-import psutil
 import time
 import subprocess
 
@@ -259,21 +257,23 @@ def is_null_driver_enabled(runtime_dir):
     except Exception:
         return False
 
+        def is_running(proc_name):
+    result = subprocess.run(
+        ["tasklist", "/FI", f"IMAGENAME eq {proc_name}"],
+        capture_output=True, text=True
+    )
+    return proc_name.lower() in result.stdout.lower()
 
-def kill_process(proc):
-    try:
-        proc.terminate()  # ask Steam to close
-    except Exception:
-        pass
+def close_process(proc_name):
+    # Try graceful close
+    subprocess.run(["taskkill", "/IM", proc_name, "/T"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-def force_kill_process(proc):
-    try:
-        proc.kill()  # force kill
-    except Exception:
-        pass
+def force_close_process(proc_name):
+    # Force kill
+    subprocess.run(["taskkill", "/F", "/IM", proc_name, "/T"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def close_steam():
-    running = [p for p in psutil.process_iter(['name']) if p.info['name'] in STEAM_PROCESSES]
+    running = any(is_running(p) for p in STEAM_PROCESSES)
 
     if not running:
         print("Steam is not running.")
@@ -281,24 +281,21 @@ def close_steam():
 
     print("Steam is running. Attempting graceful shutdown...")
 
-    # Try graceful termination
-    for proc in running:
-        kill_process(proc)
+    for p in STEAM_PROCESSES:
+        close_process(p)
 
     time.sleep(3)
 
-    # Check again
-    still_running = [p for p in psutil.process_iter(['name']) if p.info['name'] in STEAM_PROCESSES]
+    still_running = any(is_running(p) for p in STEAM_PROCESSES)
 
     if still_running:
         print("Steam did not close. Forcing shutdown...")
-        for proc in still_running:
-            force_kill_process(proc)
+        for p in STEAM_PROCESSES:
+            force_close_process(p)
     else:
         print("Steam closed cleanly.")
 
     print("Done.")
-
 
 
 def get_runtime_status(runtime_dir):
