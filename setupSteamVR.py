@@ -5,6 +5,17 @@ import subprocess
 import shutil
 import stat
 
+import psutil
+import time
+import subprocess
+
+# Processes to check are stopped before doing this.
+STEAM_PROCESSES = [
+    "steam.exe",
+    "steamservice.exe",
+    "steamwebhelper.exe"
+]
+
 # Where merged frozen versions are stored
 FROZEN_DIR = r"C:\CommonGround\1.1 SteamVR"
 
@@ -178,6 +189,10 @@ def install_frozen_version():
 # -----------------------------
 
 def setup_steamvr():
+
+    print("=== Shutting down Steam ===")
+    close_steam()
+
     print("=== Cleaning old SteamVR traces ===")
     clean_steamvr_traces()
 
@@ -243,6 +258,47 @@ def is_null_driver_enabled(runtime_dir):
         return bool(null_cfg.get("driver_null", {}).get("enable", False))
     except Exception:
         return False
+
+
+def kill_process(proc):
+    try:
+        proc.terminate()  # ask Steam to close
+    except Exception:
+        pass
+
+def force_kill_process(proc):
+    try:
+        proc.kill()  # force kill
+    except Exception:
+        pass
+
+def close_steam():
+    running = [p for p in psutil.process_iter(['name']) if p.info['name'] in STEAM_PROCESSES]
+
+    if not running:
+        print("Steam is not running.")
+        return
+
+    print("Steam is running. Attempting graceful shutdown...")
+
+    # Try graceful termination
+    for proc in running:
+        kill_process(proc)
+
+    time.sleep(3)
+
+    # Check again
+    still_running = [p for p in psutil.process_iter(['name']) if p.info['name'] in STEAM_PROCESSES]
+
+    if still_running:
+        print("Steam did not close. Forcing shutdown...")
+        for proc in still_running:
+            force_kill_process(proc)
+    else:
+        print("Steam closed cleanly.")
+
+    print("Done.")
+
 
 
 def get_runtime_status(runtime_dir):
