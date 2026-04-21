@@ -257,7 +257,7 @@ def is_null_driver_enabled(runtime_dir):
     except Exception:
         return False
 
-        def is_running(proc_name):
+def is_running(proc_name):
     result = subprocess.run(
         ["tasklist", "/FI", f"IMAGENAME eq {proc_name}"],
         capture_output=True, text=True
