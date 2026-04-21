@@ -416,7 +416,7 @@ class Dashboard(QWidget):
         else:
             # reset steamvr (just unfreeze and re-apply config to be safe)
             setupSteamVR.unfreeze()
-        self.check_steamvr_status(self)
+        self.check_steamvr_status()
 
     def check_steamvr_status(self):
         # True means CG ready, False means not ready
