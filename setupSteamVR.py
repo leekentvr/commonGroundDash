@@ -166,7 +166,7 @@ def install_frozen_version():
         raise RuntimeError(f"Missing contents folder: {content_src}")
 
     # Copy base runtime tree first
-    shutil.copytree(runtime_src, RUNTIME_DIR)
+    shutil.copytree(runtime_src, RUNTIME_DIR, dirs_exist_ok=True)
 
     # Merge contents tree into runtime tree
     shutil.copytree(content_src, RUNTIME_DIR, dirs_exist_ok=True)

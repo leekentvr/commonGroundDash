@@ -92,7 +92,7 @@ class Dashboard(QWidget):
         # C check SteamVR version and null driver status
         config_layout_hC = QHBoxLayout()
         config_layout_hC.addStretch()
-        self.steamvr_version_label = QLabel("SteamVR Check: ")
+        self.steamvr_version_label = QLabel("SteamVR Ready and Locked: ")
         self.steamvr_version_label.setFixedHeight(48)
         config_layout_hC.addWidget(self.steamvr_version_label)
         config_layout_hC.addWidget(self.steamvr_icon_label)
@@ -416,13 +416,16 @@ class Dashboard(QWidget):
         else:
             # reset steamvr (just unfreeze and re-apply config to be safe)
             setupSteamVR.unfreeze()
+        self.check_steamvr_status(self)
 
     def check_steamvr_status(self):
         # True means CG ready, False means not ready
         if(setupSteamVR.get_runtime_status(setupSteamVR.RUNTIME_DIR) == True):
             self.steamvr_icon_label.setPixmap(QPixmap("assets/greenHeart.png"))
+            self.check_steamvr_btn.setText("Unlock SteamVR")
         else:
             self.steamvr_icon_label.setPixmap(QPixmap("assets/redStop.png"))
+            self.check_steamvr_btn.setText("Lock SteamVR")
 
     def open_config_file(self):
         config_path = Path(self.commonground_path) / "cgconfig.cfg"
