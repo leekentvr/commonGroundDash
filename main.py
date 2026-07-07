@@ -2,6 +2,7 @@
 import sys
 import json
 import os
+import re
 from pathlib import Path
 
 from PySide6.QtWidgets import ( # type: ignore
@@ -17,6 +18,17 @@ from process_manager import ProcessManager
 from heartbeat_Fader import HeartbeatIcon
 import loadConfigFile
 import setupSteamVR
+
+MISSING_CONFIG_VALUES = {"", "null", "none"}
+
+
+def is_missing_config_value(value):
+    return value is None or str(value).strip().lower() in MISSING_CONFIG_VALUES
+
+
+def is_bat_assignment(line, key):
+    return re.match(rf"^\s*set\s+{re.escape(key)}\s*=", line, re.IGNORECASE) is not None
+
 
 class Dashboard(QWidget):
     roomname = "null"
@@ -379,13 +391,18 @@ class Dashboard(QWidget):
                 # Found a room in the config
                 line_count = sum(1 for line in f if line.strip()) - 1  # and subtract header
                 path = Path(self.commonground_path) / "5. RoomClient Middleware" / "start_avatar_manager.bat"
-                self.update_bat_file(
+                skipped_keys = self.update_bat_file(
                     path,
                     roomname=self.getRoomName(),
                     areaManagerID=self.getAreaManagerID(),
                     serverAddr=self.getServerAddr(),
                     serverPort=self.getServerPort()
                 )
+                if skipped_keys:
+                    self.list_widget.addItem(
+                        "[WARN] Skipped bat update for missing config values: "
+                        + ", ".join(skipped_keys)
+                    )
 
         except Exception:
             return False, 0, filepath
@@ -395,20 +412,30 @@ class Dashboard(QWidget):
         with open(path, "r") as f:
             lines = f.readlines()
         new_lines = []
+        skipped_keys = set()
+        bat_updates = [
+            ("zenoh_key_expr", "roomID", roomname),
+            ("area_manager_id", "areaManagerID", areaManagerID),
+            ("server_addr", "serverIP", serverAddr),
+            ("server_port", "serverPort", serverPort),
+        ]
         for line in lines:
-            if line.strip().startswith("set zenoh_key_expr="):
-                new_lines.append(f"set zenoh_key_expr={roomname}\n")
-            elif line.strip().startswith("set area_manager_id="):
-                new_lines.append(f"set area_manager_id={areaManagerID}\n")
-            elif line.strip().startswith("set server_addr=") and serverAddr:
-                new_lines.append(f"set server_addr={serverAddr}\n")
-            elif line.strip().startswith("set server_port="):
-                new_lines.append(f"set server_port={serverPort}\n")
-            else:
+            updated = False
+            for bat_key, config_key, value in bat_updates:
+                if is_bat_assignment(line, bat_key):
+                    if is_missing_config_value(value):
+                        skipped_keys.add(config_key)
+                        new_lines.append(line)
+                    else:
+                        new_lines.append(f"set {bat_key}={value}\n")
+                    updated = True
+                    break
+            if not updated:
                 new_lines.append(line)
 
         with open(path, "w") as f:
             f.writelines(new_lines)
+        return sorted(skipped_keys)
 
     def updateSteamVR(self):
         if(setupSteamVR.get_runtime_status(setupSteamVR.RUNTIME_DIR) == False):
